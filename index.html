@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hydro Power Plant | Hazard & Emergency Action Matrix</title>
+<style>
+/* ── TOKENS ──────────────────────────────────────── */
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --card:#1c2330;
+  --border:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --accent:#58a6ff;
+
+  /* Hazard colour palette */
+  --c1:#ff6b6b; /* Flooding     – red      */
+  --c2:#ffd93d; /* Electrical   – yellow   */
+  --c3:#6bcb77; /* Confined     – green    */
+  --c4:#f77f00; /* Mechanical   – orange   */
+  --c5:#9b5de5; /* Hydraulic    – purple   */
+  --c6:#ff4d6d; /* Fire         – crimson  */
+  --c7:#4cc9f0; /* Slips/Falls  – cyan     */
+  --c8:#a8dadc; /* Noise        – teal     */
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+}
+
+/* ── HEADER ──────────────────────────────────────── */
+.site-header{
+  background:linear-gradient(135deg,#0d1117 0%,#1a2744 50%,#0d2137 100%);
+  border-bottom:1px solid var(--border);
+  padding:40px 24px 32px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.site-header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(88,166,255,.08),transparent);
+  pointer-events:none;
+}
+.header-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(88,166,255,.12);
+  border:1px solid rgba(88,166,255,.3);
+  border-radius:20px;padding:5px 14px;
+  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:18px;
+}
+.site-header h1{
+  font-size:clamp(22px,4vw,36px);
+  font-weight:800;line-height:1.15;
+  background:linear-gradient(135deg,#e6edf3,#58a6ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:10px;
+}
+.site-header p{
+  font-size:14px;color:var(--muted);max-width:560px;margin:0 auto 24px;
+  line-height:1.6;
+}
+
+/* Stats row */
+.stats{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+  margin-bottom:0;
+}
+.stat{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 20px;text-align:center;min-width:100px;
+}
+.stat-num{
+  font-size:22px;font-weight:800;color:var(--accent);
+  font-variant-numeric:tabular-nums;
+}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* ── FILTER TABS ─────────────────────────────────── */
+.controls{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,17,23,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 24px;
+}
+.filter-row{
+  display:flex;flex-wrap:wrap;gap:8px;
+  max-width:1200px;margin:0 auto;align-items:center;
+}
+.filter-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-right:4px;text-transform:uppercase;letter-spacing:.08em}
+.tab{
+  padding:5px 13px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#0d1117;font-weight:700}
+.tab-all.active{background:var(--accent)}
+
+/* ── GRID ────────────────────────────────────────── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:20px;
+  max-width:1400px;margin:0 auto;
+  padding:28px 24px;
+}
+
+/* ── HAZARD CARD ─────────────────────────────────── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  transition:transform .2s,box-shadow .2s,opacity .3s;
+  display:flex;flex-direction:column;
+}
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+}
+.card.hidden{opacity:0;pointer-events:none;height:0;padding:0;margin:0;border:none;overflow:hidden}
+
+/* Card top stripe */
+.card-top{
+  padding:16px 18px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:12px;
+}
+.hazard-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.card-title-wrap{flex:1}
+.card-title{
+  font-size:14px;font-weight:700;line-height:1.3;
+  color:var(--text);
+}
+.card-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.sev-badge{
+  display:inline-block;
+  font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 8px;border-radius:10px;margin-top:5px;
+}
+
+/* Accordion sections */
+.card-sections{padding:4px 0 8px;flex:1;display:flex;flex-direction:column}
+
+.acc-item{border-bottom:1px solid rgba(255,255,255,.05)}
+.acc-item:last-child{border-bottom:none}
+
+.acc-head{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 18px;cursor:pointer;
+  transition:background .15s;
+  user-select:none;
+}
+.acc-head:hover{background:rgba(255,255,255,.03)}
+
+.acc-icon{
+  width:24px;height:24px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;
+}
+.acc-label{font-size:12px;font-weight:600;flex:1;color:var(--text)}
+.acc-count{font-size:10px;color:var(--muted);font-weight:500}
+.acc-arrow{
+  font-size:10px;color:var(--muted);
+  transition:transform .2s;
+}
+.acc-head.open .acc-arrow{transform:rotate(180deg)}
+
+.acc-body{
+  display:none;padding:0 18px 12px;
+}
+.acc-body.open{display:block}
+
+.acc-body ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.acc-body li{
+  display:flex;align-items:flex-start;gap:7px;
+  font-size:12px;color:#c9d1d9;line-height:1.5;
+}
+.acc-body li::before{
+  content:'';
+  width:5px;height:5px;border-radius:50%;
+  margin-top:6px;flex-shrink:0;
+}
+
+/* ── SECTION COLOURS ─────────────────────────────── */
+/* Safety Devices – blue */
+.s-devices .acc-icon{background:rgba(88,166,255,.15);color:#58a6ff}
+.s-devices .acc-label{color:#58a6ff}
+.s-devices li::before{background:#58a6ff}
+/* Preventive – green */
+.s-prevent .acc-icon{background:rgba(107,203,119,.15);color:#6bcb77}
+.s-prevent .acc-label{color:#6bcb77}
+.s-prevent li::before{background:#6bcb77}
+/* Emergency Actions – red/orange */
+.s-actions .acc-icon{background:rgba(255,107,107,.15);color:#ff6b6b}
+.s-actions .acc-label{color:#ff6b6b}
+.s-actions li::before{background:#ff6b6b}
+/* Emergency Devices – purple */
+.s-edevices .acc-icon{background:rgba(155,93,229,.15);color:#9b5de5}
+.s-edevices .acc-label{color:#9b5de5}
+.s-edevices li::before{background:#9b5de5}
+
+/* ── FULL VIEW (expanded) ────────────────────────── */
+.view-toggle{
+  text-align:center;padding:8px 24px 0;
+}
+.view-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 18px;border-radius:8px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:12px;cursor:pointer;
+  transition:all .2s;
+}
+.view-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── PRINT STYLES ────────────────────────────────── */
+@media print{
+  body{background:#fff;color:#000}
+  .site-header{background:#1a2744;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .controls{position:static;background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  .acc-body{display:block !important}
+}
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr;padding:14px}
+  .site-header{padding:28px 16px 20px}
+}
+
+/* ── ANIMATION ───────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeIn .4s ease both}
+.card:nth-child(1){animation-delay:.05s}
+.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.15s}
+.card:nth-child(4){animation-delay:.2s}
+.card:nth-child(5){animation-delay:.25s}
+.card:nth-child(6){animation-delay:.3s}
+.card:nth-child(7){animation-delay:.35s}
+.card:nth-child(8){animation-delay:.4s}
+
+/* ── LEGEND ──────────────────────────────────────── */
+.legend{
+  max-width:1400px;margin:0 auto 4px;padding:0 24px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+}
+.legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);
+}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<header class="site-header">
+  <div class="header-badge">⚡ Safety Management by Ankit Verma</div>
+  <h1>Hydro Power Plant<br/>Hazard &amp; Emergency Action Matrix</h1>
+  <p>Comprehensive identification of operational hazards, preventive controls, safety devices, and emergency response protocols for hydroelectric facility management.</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-num">8</div><div class="stat-lbl">Hazard Types</div></div>
+    <div class="stat"><div class="stat-num">32+</div><div class="stat-lbl">Safety Devices</div></div>
+    <div class="stat"><div class="stat-num">32+</div><div class="stat-lbl">Preventive Measures</div></div>
+    <div class="stat"><div class="stat-num">32+</div><div class="stat-lbl">Emergency Actions</div></div>
+  </div>
+</header>
+
+<!-- ════════ CONTROLS ════════ -->
+<div class="controls">
+  <div class="filter-row">
+    <span class="filter-lbl">Filter:</span>
+    <button class="tab tab-all active" onclick="filterCards('all',this)">All Hazards</button>
+    <button class="tab" onclick="filterCards('structural',this)" data-cat="structural">🌊 Structural</button>
+    <button class="tab" onclick="filterCards('electrical',this)" data-cat="electrical">⚡ Electrical</button>
+    <button class="tab" onclick="filterCards('confined',this)" data-cat="confined">🕳️ Confined Space</button>
+    <button class="tab" onclick="filterCards('mechanical',this)" data-cat="mechanical">⚙️ Mechanical</button>
+    <button class="tab" onclick="filterCards('hydraulic',this)" data-cat="hydraulic">🔧 Hydraulic</button>
+    <button class="tab" onclick="filterCards('fire',this)" data-cat="fire">🔥 Fire</button>
+    <button class="tab" onclick="filterCards('falls',this)" data-cat="falls">🪜 Falls</button>
+    <button class="tab" onclick="filterCards('noise',this)" data-cat="noise">🔊 Noise</button>
+  </div>
+</div>
+
+<!-- ════════ LEGEND ════════ -->
+<div class="legend">
+  <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:6px">Sections:</span>
+  <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Safety Devices</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6bcb77"></div>Preventive Measures</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b"></div>Emergency Actions</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9b5de5"></div>Emergency Devices</div>
+</div>
+
+<!-- ════════ CARDS GRID ════════ -->
+<div class="grid" id="grid">
+
+  <!-- ① FLOODING / DAM BREACH -->
+  <div class="card" data-cat="structural">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(255,107,107,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(255,107,107,.15)">🌊</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Flooding / Dam Breach / Structural Failure</div>
+        <div class="card-sub">Dam, Spillway, Drainage Galleries</div>
+        <span class="sev-badge" style="background:rgba(255,107,107,.2);color:#ff6b6b">CRITICAL</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Water level sensors &amp; ultrasonic depth gauges</li>
+            <li>Piezometers &amp; inclinometers (structural movement)</li>
+            <li>Automated spillway crest gates</li>
+            <li>Inflow forecasting telemetry</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Conduct regular structural and bathymetric surveys</li>
+            <li>Maintain and test spillway gate mechanisms monthly</li>
+            <li>Implement upstream watershed weather monitoring systems</li>
+            <li>Keep drainage galleries free of debris and calcification</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Sound plant-wide and downstream evacuation sirens</li>
+            <li>Initiate immediate controlled drawdown via spillway gates</li>
+            <li>Isolate powerhouse — drop intake gates &amp; close main inlet valves (MIV)</li>
+            <li>Coordinate with local emergency disaster management authorities</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">5 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Early warning sirens and public address systems</li>
+            <li>High-capacity emergency drainage pumps</li>
+            <li>Intake bulkhead drop gates (gravity-operated)</li>
+            <li>Emergency backup diesel generators (above flood levels)</li>
+            <li>Inflatable rescue boats and life rafts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② ELECTRICAL -->
+  <div class="card" data-cat="electrical">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(255,217,61,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(255,217,61,.15)">⚡</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Electrical Shock / Arc Flash / Electrocution</div>
+        <div class="card-sub">Switchgear, Busbars, High-Voltage Equipment</div>
+        <span class="sev-badge" style="background:rgba(255,217,61,.2);color:#ffd93d">CRITICAL</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Insulated busbar covers &amp; barriers</li>
+            <li>Arc flash detection relays (light &amp; pressure sensitive)</li>
+            <li>Safety interlock switches on switchgear enclosures</li>
+            <li>Grounding switches &amp; permanent grounding pads</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Enforce strict Lockout/Tagout (LOTO) with double-verification</li>
+            <li>Mandate arc-rated clothing (Cat 2-4 PPE), voltage-rated gloves &amp; face shields</li>
+            <li>Perform regular infrared thermography on transformers and switchgear</li>
+            <li>Maintain proper approach boundaries around high-voltage equipment</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>De-energize the affected sector immediately from remote control room</li>
+            <li>Extract victim using insulated rescue hook — never touch directly</li>
+            <li>Call emergency medical services; administer CPR/AED if trained</li>
+            <li>Secure the area to prevent secondary exposure</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Insulated rescue hooks</li>
+            <li>Automated External Defibrillators (AEDs)</li>
+            <li>Emergency trip / isolation pushbuttons</li>
+            <li>Specialized burn first-aid kits</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ CONFINED SPACE -->
+  <div class="card" data-cat="confined">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(107,203,119,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(107,203,119,.15)">🕳️</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Confined Space Entanglement &amp; Atmospheric Toxicity</div>
+        <div class="card-sub">Penstocks, Scroll Cases, Inspection Galleries</div>
+        <span class="sev-badge" style="background:rgba(107,203,119,.2);color:#6bcb77">HIGH</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Multi-gas detectors (continuous monitoring)</li>
+            <li>Forced-air ventilation fans / blowers</li>
+            <li>Mechanical lockouts for upstream valves</li>
+            <li>Lockable entry hatches</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Implement strict Permit-to-Work (PTW) system for all entries</li>
+            <li>Perform pre-entry atmospheric testing: O₂, LEL, H₂S, CO</li>
+            <li>Deploy designated safety watch (standby person) at entrance</li>
+            <li>Establish continuous communication protocol (radio or tether)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Order immediate evacuation if gas levels spike or ventilation fails</li>
+            <li>Initiate retrieval plan using external mechanical winches</li>
+            <li>Administer emergency oxygen to rescued personnel</li>
+            <li>Do not allow standby watch to enter without proper breathing apparatus</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Retrieval tripods with mechanical winches and harnesses</li>
+            <li>Self-Contained Breathing Apparatus (SCBA)</li>
+            <li>Emergency Escape Breathing Devices (EEBD — 15 min air)</li>
+            <li>Intrinsically safe (explosion-proof) flashlights and radios</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ MECHANICAL -->
+  <div class="card" data-cat="mechanical">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(247,127,0,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(247,127,0,.15)">⚙️</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Mechanical Entanglement / Crushing</div>
+        <div class="card-sub">Turbine Shaft, Main Governor, Large Valves</div>
+        <span class="sev-badge" style="background:rgba(247,127,0,.2);color:#f77f00">CRITICAL</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Heavy-duty fixed machine guards and enclosures</li>
+            <li>Safety interlock switches on access panels</li>
+            <li>Presence-sensing light curtains</li>
+            <li>Shaft rotation speed sensors</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Ensure all guards are securely bolted before machinery startup</li>
+            <li>Keep loose clothing, long hair, and jewelry completely secured</li>
+            <li>Establish clear visual and audible startup warning signals</li>
+            <li>Maintain clear, clean walking zones around rotating components</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Depress the nearest Emergency Stop (E-stop) button immediately</li>
+            <li>Apply the mechanical turbine brake if safe and applicable</li>
+            <li>Secure machine using LOTO to prevent unexpected shifting during rescue</li>
+            <li>Provide immediate trauma first-aid for crush injuries or bleeding</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Emergency Stop (E-stop) buttons (mushroom head)</li>
+            <li>Safety pull-cord switches along conveyors or long shafts</li>
+            <li>Hydraulic/pneumatic turbine brakes</li>
+            <li>Emergency trauma kits (tourniquets, heavy pressure bandages)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ HYDRAULIC -->
+  <div class="card" data-cat="hydraulic">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(155,93,229,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(155,93,229,.15)">🔧</div>
+      <div class="card-title-wrap">
+        <div class="card-title">High-Pressure Hydraulic Failure / Oil Mist Injection</div>
+        <div class="card-sub">Governor Lines, Lubrication Systems</div>
+        <span class="sev-badge" style="background:rgba(155,93,229,.2);color:#9b5de5">HIGH</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Shielding guards and sleeves over high-pressure hoses</li>
+            <li>Pressure relief valves (PRVs)</li>
+            <li>Hydraulic accumulators with safety blocks</li>
+            <li>Oil mist detectors in enclosed spaces</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Conduct routine pressure testing and acoustic emission testing on lines</li>
+            <li>Enforce strict replacement schedules for flexible hydraulic hoses</li>
+            <li>Use non-destructive testing (NDT) to check for micro-cracks in steel piping</li>
+            <li>Never check leaks with bare hands — use cardboard or a mirror</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Depressurize hydraulic system immediately via remote dump valves</li>
+            <li>Seek immediate specialized medical treatment for fluid injection injuries (time-critical)</li>
+            <li>Isolate electrical ignition sources if oil mist cloud forms</li>
+            <li>Contain spilled hydraulic oil using absorbents to prevent slips or waterway ingress</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Emergency hydraulic dump valves</li>
+            <li>Spill containment kits (booms, absorbent pads, neutralizers)</li>
+            <li>High-pressure fluid injection warning tags</li>
+            <li>Fire-resistant barrier walls between hydraulic units</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ FIRE & EXPLOSION -->
+  <div class="card" data-cat="fire">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(255,77,109,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(255,77,109,.15)">🔥</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Fire &amp; Explosion</div>
+        <div class="card-sub">Generator Stator, Transformers, Lubrication Oil Tanks</div>
+        <span class="sev-badge" style="background:rgba(255,77,109,.2);color:#ff4d6d">CRITICAL</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Transformer blast walls (fire barriers)</li>
+            <li>Dissolved Gas Analysis (DGA) online monitors</li>
+            <li>Thermal imaging sensors and linear heat detection cables</li>
+            <li>Oil temperature indicators with alarm contacts</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Maintain transformer oil dielectric strength through regular filtering and testing</li>
+            <li>Keep vegetation and combustible materials cleared from switchyard</li>
+            <li>Ensure generator housing is free from oil leaks and carbon dust buildup</li>
+            <li>Regularly inspect and weight-test gas suppression cylinders</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Trigger fixed fire suppression system manually if automatic sequence fails</li>
+            <li>Evacuate facility immediately via designated fire exit routes</li>
+            <li>Isolate electrical feeds to burning equipment to prevent tracking</li>
+            <li>Contain burning oil runoff within transformer catchment pit</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>High-pressure water deluge spray systems</li>
+            <li>CO₂ or clean-agent (Inergen/Novec) gaseous flooding systems</li>
+            <li>Fire-rated doors and dampers</li>
+            <li>Self-contained portable foam fire extinguishers</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ SLIPS, TRIPS & FALLS -->
+  <div class="card" data-cat="falls">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(76,201,240,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(76,201,240,.15)">🪜</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Slips, Trips, and Falls</div>
+        <div class="card-sub">Wet Areas, Open Gratings, Steep Catwalks</div>
+        <span class="sev-badge" style="background:rgba(76,201,240,.2);color:#4cc9f0">MEDIUM</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Self-closing safety gates on ladders</li>
+            <li>Heavy-duty toe boards and robust handrails</li>
+            <li>Slip-resistant open steel floor grating</li>
+            <li>Safety netting under high work platforms</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Apply anti-slip coatings to high-traffic metal surfaces</li>
+            <li>Clean up oil leaks, grease, and water accumulation immediately</li>
+            <li>Enforce mandatory safety footwear with oil-resistant, high-grip soles</li>
+            <li>Implement 100% tie-off policy above 1.8 meters using appropriate anchors</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Stabilize injured person — avoid moving if spinal injury is suspected</li>
+            <li>Deploy fall-arrest rescue team if worker is suspended in a harness</li>
+            <li>Clear the area to allow medical personnel unhindered access</li>
+            <li>Report structural failure or slip source immediately for barricading</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>Full-body safety harnesses and shock-absorbing lanyards</li>
+            <li>Fixed vertical ladder fall arrest systems (engineered cable/rail)</li>
+            <li>Suspension trauma straps (to prevent orthostatic intolerance)</li>
+            <li>Rescue stretchers (Spine boards / Basket stretchers)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ NOISE -->
+  <div class="card" data-cat="noise">
+    <div class="card-top" style="background:linear-gradient(135deg,rgba(168,218,220,.08),transparent)">
+      <div class="hazard-icon" style="background:rgba(168,218,220,.15)">🔊</div>
+      <div class="card-title-wrap">
+        <div class="card-title">Noise-Induced Hearing Loss &amp; Acoustic Trauma</div>
+        <div class="card-sub">Generator Hall, Turbine Floor, High-Decibel Zones</div>
+        <span class="sev-badge" style="background:rgba(168,218,220,.2);color:#a8dadc">MEDIUM</span>
+      </div>
+    </div>
+    <div class="card-sections">
+      <div class="acc-item">
+        <div class="acc-head s-devices" onclick="toggle(this)">
+          <div class="acc-icon s-devices">🛡️</div>
+          <span class="acc-label s-devices">Safety Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-devices">
+          <ul>
+            <li>Acoustic enclosures around generators and turbines</li>
+            <li>Sound-absorbing wall insulation panels</li>
+            <li>Vibration isolation mounts under heavy machinery</li>
+            <li>Noise-level warning signs at entry doors</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-prevent" onclick="toggle(this)">
+          <div class="acc-icon s-prevent">✅</div>
+          <span class="acc-label s-prevent">Preventive Measures</span>
+          <span class="acc-count">4 measures</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-prevent">
+          <ul>
+            <li>Perform regular noise mapping of the entire plant floor</li>
+            <li>Enforce mandatory dual-protection policy (earplugs + earmuffs) in high-noise zones</li>
+            <li>Schedule regular worker rotation out of high-decibel areas to reduce daily dose</li>
+            <li>Conduct annual audiometric hearing exams for all operational personnel</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-actions" onclick="toggle(this)">
+          <div class="acc-icon s-actions">🚨</div>
+          <span class="acc-label s-actions">Emergency Actions</span>
+          <span class="acc-count">4 actions</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-actions">
+          <ul>
+            <li>Rotate worker out of high-noise area permanently if sudden acoustic trauma occurs</li>
+            <li>Provide immediate medical evaluation for sudden hearing loss or tinnitus</li>
+            <li>Adjust plant operations or dampen machinery if noise levels spike unexpectedly</li>
+            <li>Deploy portable noise barriers around temporary loud maintenance work</li>
+          </ul>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-head s-edevices" onclick="toggle(this)">
+          <div class="acc-icon s-edevices">🧰</div>
+          <span class="acc-label s-edevices">Emergency Devices</span>
+          <span class="acc-count">4 devices</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body s-edevices">
+          <ul>
+            <li>High-attenuation electronic noise-canceling earmuffs</li>
+            <li>Portable noise level meters / dosimeters</li>
+            <li>Custom-molded earplugs</li>
+            <li>Audiometric testing booths and equipment</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- Footer -->
+<footer style="text-align:center;padding:32px 24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+  <p>Hydro Power Plant — Comprehensive Hazard by Ankit Verma &amp; Emergency Action Matrix v2</p>
+  <p style="margin-top:6px;font-size:11px">This document is for safety management reference. Always follow site-specific procedures and consult qualified safety personnel.</p>
+</footer>
+
+<script>
+// Accordion toggle
+function toggle(head){
+  head.classList.toggle('open');
+  const body=head.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// Open first section of each card by default
+document.querySelectorAll('.acc-item:first-child .acc-head').forEach(h=>{
+  h.classList.add('open');
+  h.nextElementSibling.classList.add('open');
+});
+
+// Filter cards
+function filterCards(cat, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.card').forEach(card=>{
+    if(cat==='all'||card.dataset.cat===cat){
+      card.classList.remove('hidden');
+      card.style.display='';
+    } else {
+      card.style.display='none';
+    }
+  });
+}
+
+// Expand / collapse all
+function expandAll(){
+  document.querySelectorAll('.acc-head').forEach(h=>{
+    h.classList.add('open');
+    h.nextElementSibling.classList.add('open');
+  });
+}
+function collapseAll(){
+  document.querySelectorAll('.acc-head').forEach(h=>{
+    h.classList.remove('open');
+    h.nextElementSibling.classList.remove('open');
+  });
+}
+</script>
+
+</body>
+</html>
